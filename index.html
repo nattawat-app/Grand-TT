@@ -437,7 +437,7 @@
   }
 
   function spawnHearts(){
-    const count = 12; // ✅ ลดจำนวน
+    const count = 6; // ✅ ลดจำนวน
     for(let i=0;i<count;i++){
       const size = Math.floor(Math.random()*22) + 14;
       const h = makeHeartEl(size);
@@ -455,7 +455,7 @@
     }
   }
   spawnHearts();
-  setInterval(spawnHearts, 2000); // ✅ เกิดช้าลง
+  setInterval(spawnHearts, 2500); // ✅ เกิดช้าลง
 
   // ===== 2) Navigation =====
   document.getElementById('toScratch').addEventListener('click', () => {
@@ -691,3 +691,4 @@
 </script>
 </body>
 </html>
+
