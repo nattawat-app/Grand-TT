@@ -402,7 +402,7 @@
   }
 
   function spawnHearts(){
-    const count = 34;
+    const count = 6;
     for(let i=0;i<count;i++){
       const size = Math.floor(Math.random()*22) + 14;
       const h = makeHeartEl(size);
@@ -420,7 +420,7 @@
     }
   }
   spawnHearts();
-  setInterval(spawnHearts, 1100);
+  setInterval(spawnHearts,2500);
 
   // ===== 2) Navigation =====
   document.getElementById('toScratch').addEventListener('click', () => {
