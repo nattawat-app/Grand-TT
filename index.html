@@ -258,25 +258,22 @@
   .seal svg{ width: 30px; height: 28px; }
 
   /* letter pops out from envelope */
-  .letter{
+.letter{
   position:absolute;
   left:50%;
-  bottom: 40px;
-  transform: translateX(-50%) translateY(30px);
+  bottom: 35px;
+  transform: translateX(-50%) translateY(20px);
 
-  width: min(92vw, 420px);   /* ✅ กว้างขึ้นตามหน้าจอ */
-  max-height: 55vh;          /* ✅ เตี้ยลง */
-  overflow-y: auto;          /* ✅ เลื่อนอ่านได้ถ้าข้อความยาว */
+  width: min(92vw, 460px);   /* ✅ กว้างขึ้น (แนวนอน) */
+  height: 200px;             /* ✅ ความสูงตายตัว → ไม่ยืด */
+  overflow-y: auto;          /* ✅ เลื่อนอ่านได้ */
 
   border-radius: 16px;
   background: #fff;
-  padding: 20px 22px;
-    box-shadow: 0 18px 35px rgba(0,0,0,.18);
-    border: 2px solid rgba(255,79,163,.18);
-    opacity: 0;
-    transition: transform .7s cubic-bezier(.2,.9,.2,1), opacity .35s ease;
-    z-index: 4;
-  }
+  padding: 18px 22px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.15);
+}
+
   .letter h2{
   margin:0 0 8px;
   color: var(--deep);
@@ -300,7 +297,7 @@
   }
   .envelope.open .letter{
     opacity: 1;
-    transform: translateX(-50%) translateY(-5px);
+    transform: translateX(-50%) translateY(0px);
   }
 
   .modalClose{
@@ -648,6 +645,7 @@
 </script>
 </body>
 </html>
+
 
 
 
