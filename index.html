@@ -182,7 +182,7 @@
   .modal.show{ display:flex; }
 
   .envelopeStage{
-    width:min(380px, 94vw);
+    width:min(520px, 96vw);
     position:relative;
     display:flex;
     justify-content:center;
@@ -238,7 +238,7 @@
   .seal{
     position:absolute;
     left:50%;
-    bottom: 10px;
+    bottom: 20px; /* ✅ ลงล่าง ไม่ทับข้อความ */
     transform: translateX(-50%);
     width: 62px;
     height: 62px;
@@ -257,51 +257,70 @@
   .seal:active{ transform: translateX(-50%) scale(.98); }
   .seal svg{ width: 30px; height: 28px; }
 
-  /* letter pops out from envelope */
-.letter{
-  position:absolute;
-  left:50%;
-  bottom: 35px;
-  transform: translateX(-50%) translateY(20px);
-
-  width: min(92vw, 460px);   /* ✅ กว้างขึ้น (แนวนอน) */
-  height: 200px;             /* ✅ ความสูงตายตัว → ไม่ยืด */
-  overflow-y: auto;          /* ✅ เลื่อนอ่านได้ */
-
-  border-radius: 16px;
-  background: #fff;
-  padding: 18px 22px;
-  box-shadow: 0 10px 25px rgba(0,0,0,.15);
-border: 2px solid rgba(255,79,163,.18);
+  /* letter (ของเดิมยังอยู่ แต่เราจะใช้เป็นแอนิเมชันเปิดนิดนึงก่อนสลับไปกล่องข้อความ) */
+  .letter{
+    position:absolute;
+    left:50%;
+    bottom: 35px;
+    transform: translateX(-50%) translateY(30px);
+    width: 290px;
+    border-radius: 16px;
+    background: #fff;
+    padding: 18px 16px;
+    box-shadow: 0 18px 35px rgba(0,0,0,.18);
+    border: 2px solid rgba(255,79,163,.18);
     opacity: 0;
     transition: transform .7s cubic-bezier(.2,.9,.2,1), opacity .35s ease;
     z-index: 4;
-}
-
+    pointer-events:none;
+  }
   .letter h2{
-  margin:0 0 8px;
-  color: var(--deep);
-  font-size: 18px;
-  text-align:center;
-}
-
-.letter p{
-  margin:0;
-  line-height:1.7;
-  font-size: 15px;
-  text-align:center;
-  white-space: pre-wrap;
-}
-/* ให้ขึ้นบรรทัดตาม \n */
+    margin:0 0 8px;
+    color: var(--deep);
+    font-size: 18px;
+    text-align:center;
+  }
+  .letter p{
+    margin:0;
+    line-height:1.7;
+    font-size: 15px;
+    text-align:center;
+    white-space: pre-wrap;
   }
 
-  /* opened state */
-  .envelope.open .env-flap{
-    transform: rotateX(165deg);
-  }
+  /* opened state (แค่โชว์นิดนึงก่อนสลับ) */
+  .envelope.open .env-flap{ transform: rotateX(165deg); }
   .envelope.open .letter{
     opacity: 1;
     transform: translateX(-50%) translateY(0px);
+  }
+
+  /* ===== Message box (ตัวจริงที่ขึ้นมาอ่าน) ===== */
+  .msgBox{
+    display:none;
+    width: min(92vw, 520px);  /* แนวนอน */
+    height: 200px;            /* ✅ เตี้ย ไม่ล้นจอ */
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 18px;
+    border: 2px solid rgba(255,79,163,.18);
+    box-shadow: 0 18px 35px rgba(0,0,0,.18);
+    padding: 18px 22px;
+    animation: popIn .25s ease-out;
+  }
+  .msgBox.show{ display:block; }
+  .msgBox h2{
+    margin: 0 0 10px;
+    color: var(--deep);
+    font-size: 18px;
+    text-align:center;
+  }
+  .msgBox p{
+    margin:0;
+    line-height:1.85;
+    font-size: 15px;
+    text-align:center;
+    white-space: pre-wrap;
   }
 
   .modalClose{
@@ -317,6 +336,7 @@ border: 2px solid rgba(255,79,163,.18);
     box-shadow: 0 14px 24px rgba(0,0,0,.16);
     font-size: 18px;
     font-weight: 900;
+    z-index: 60;
   }
 </style>
 </head>
@@ -367,11 +387,12 @@ border: 2px solid rgba(255,79,163,.18);
     </div>
   </section>
 
-  <!-- MODAL ENVELOPE -->
+  <!-- MODAL -->
   <div class="modal" id="modal">
     <div class="envelopeStage">
       <button class="modalClose" id="closeModal" aria-label="ปิด">×</button>
 
+      <!-- ซองจดหมาย -->
       <div class="envelope" id="envelope">
         <div class="letter" id="letter">
           <h2>💌 ถึงแกรนของ ตต</h2>
@@ -389,11 +410,17 @@ border: 2px solid rgba(255,79,163,.18);
           </svg>
         </div>
       </div>
+
+      <!-- กล่องข้อความ (ขึ้นหลังจากกดเปิดจดหมาย) -->
+      <div class="msgBox" id="msgBox" aria-hidden="true">
+        <h2>💌 ถึงแกรนของ ตต</h2>
+        <p id="msgText"></p>
+      </div>
     </div>
   </div>
 
 <script>
-  // ===== 1) Falling hearts (เยอะๆ ตลอดๆ) =====
+  // ===== 1) Falling hearts (ลดลงแล้ว) =====
   const bg = document.getElementById('bg');
 
   function makeHeartEl(size){
@@ -410,7 +437,7 @@ border: 2px solid rgba(255,79,163,.18);
   }
 
   function spawnHearts(){
-    const count = 6;
+    const count = 12; // ✅ ลดจำนวน
     for(let i=0;i<count;i++){
       const size = Math.floor(Math.random()*22) + 14;
       const h = makeHeartEl(size);
@@ -428,7 +455,7 @@ border: 2px solid rgba(255,79,163,.18);
     }
   }
   spawnHearts();
-  setInterval(spawnHearts,2500);
+  setInterval(spawnHearts, 2000); // ✅ เกิดช้าลง
 
   // ===== 2) Navigation =====
   document.getElementById('toScratch').addEventListener('click', () => {
@@ -452,6 +479,10 @@ border: 2px solid rgba(255,79,163,.18);
 
 #แกรนของตต`;
 
+  // กล่องข้อความตัวจริง ใช้ข้อความเดียวกัน
+  const msgTextEl = document.getElementById('msgText');
+  msgTextEl.textContent = letterTextEl.textContent;
+
   // ===== 4) Scratch logic =====
   const imgCanvas = document.getElementById('imgCanvas');
   const scratchCanvas = document.getElementById('scratchCanvas');
@@ -459,8 +490,6 @@ border: 2px solid rgba(255,79,163,.18);
   const scCtx  = scratchCanvas.getContext('2d', { willReadFrequently:true });
 
   const pctEl = document.getElementById('pct');
-
-  // ✅ ปุ่มดูจดหมายอีกครั้ง
   const reopenBtn = document.getElementById('reopenLetter');
 
   let w=0,h=0;
@@ -576,10 +605,7 @@ border: 2px solid rgba(255,79,163,.18);
 
     if(!openedModal && pct >= 100){
       openedModal = true;
-
-      // ✅ โชว์ปุ่ม "ดูจดหมายอีกครั้ง"
       reopenBtn.classList.add('show');
-
       showEnvelope();
     }
   }
@@ -610,32 +636,48 @@ border: 2px solid rgba(255,79,163,.18);
   scratchCanvas.addEventListener('touchmove', move, {passive:false});
   scratchCanvas.addEventListener('touchend', up);
 
-  // ===== 5) Envelope modal open animation =====
+  // ===== 5) Modal + Envelope -> Message Box =====
   const modal = document.getElementById('modal');
   const envelope = document.getElementById('envelope');
   const seal = document.getElementById('seal');
   const closeModal = document.getElementById('closeModal');
+  const msgBox = document.getElementById('msgBox');
 
   function showEnvelope(){
+    // รีเซ็ตให้กลับไปเป็น "ซอง" ทุกครั้ง
+    envelope.style.display = '';
     envelope.classList.remove('open');
+    msgBox.classList.remove('show');
     modal.classList.add('show');
   }
 
-  // ✅ กดปุ่มแล้วเปิดซองจดหมายให้อ่านอีกรอบ
+  // ปุ่มดูจดหมายอีกครั้ง
   reopenBtn.addEventListener('click', () => {
     showEnvelope();
   });
 
+  // กดซีล => เปิดแป๊บ แล้วซองหาย กล่องข้อความขึ้นแทน
   seal.addEventListener('click', (e) => {
     e.stopPropagation();
+
     envelope.classList.add('open');
+
+    setTimeout(() => {
+      envelope.style.display = 'none';
+      msgBox.classList.add('show');
+    }, 450);
   });
 
-  closeModal.addEventListener('click', () => {
+  function hideModal(){
     modal.classList.remove('show');
-  });
+    envelope.style.display = '';
+    envelope.classList.remove('open');
+    msgBox.classList.remove('show');
+  }
+
+  closeModal.addEventListener('click', hideModal);
   modal.addEventListener('click', (e) => {
-    if(e.target === modal) modal.classList.remove('show');
+    if(e.target === modal) hideModal();
   });
 
   // ===== init =====
@@ -649,11 +691,3 @@ border: 2px solid rgba(255,79,163,.18);
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
