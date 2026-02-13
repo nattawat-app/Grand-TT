@@ -259,14 +259,18 @@
 
   /* letter pops out from envelope */
   .letter{
-    position:absolute;
-    left:50%;
-    bottom: 40px;
-    transform: translateX(-50%) translateY(42px);
-    width: 290px;
-    border-radius: 16px;
-    background: #fff;
-    padding: 18px 16px;
+  position:absolute;
+  left:50%;
+  bottom: 40px;
+  transform: translateX(-50%) translateY(30px);
+
+  width: min(92vw, 420px);   /* ✅ กว้างขึ้นตามหน้าจอ */
+  max-height: 55vh;          /* ✅ เตี้ยลง */
+  overflow-y: auto;          /* ✅ เลื่อนอ่านได้ถ้าข้อความยาว */
+
+  border-radius: 16px;
+  background: #fff;
+  padding: 20px 22px;
     box-shadow: 0 18px 35px rgba(0,0,0,.18);
     border: 2px solid rgba(255,79,163,.18);
     opacity: 0;
@@ -296,7 +300,7 @@
   }
   .envelope.open .letter{
     opacity: 1;
-    transform: translateX(-50%) translateY(-10px);
+    transform: translateX(-50%) translateY(-5px);
   }
 
   .modalClose{
@@ -644,6 +648,7 @@
 </script>
 </body>
 </html>
+
 
 
 
