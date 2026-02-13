@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ถึงแกรนของ ตต</title>
+
+<style>
+  :root{
+    --cream:#fff3e6;
+    --pink:#ff4fa3;
+    --pink2:#ff7fc2;
+    --deep:#d81b80;
+    --shadow: 0 18px 40px rgba(0,0,0,.14);
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Thai", sans-serif;
+    background: var(--cream);
+    color:#3a2b2f;
+    overflow-x:hidden;
+    scroll-behavior:smooth;
+  }
+
+  /* ===== Falling hearts background ===== */
+  .bg{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    overflow:hidden;
+    z-index:0;
+  }
+  .fall-heart{
+    position:absolute;
+    top:-90px;
+    opacity:.35;
+    filter: drop-shadow(0 10px 12px rgba(255,79,163,.18));
+    animation-name: fall;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+  @keyframes fall{
+    0%   { transform: translateY(-100px) translateX(0) rotate(0deg); }
+    100% { transform: translateY(calc(100vh + 140px)) translateX(var(--drift, 0px)) rotate(360deg); }
+  }
+
+  /* ===== Sections ===== */
+  .page{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding: 26px 18px;
+    position:relative;
+    z-index:1;
+    text-align:center;
+  }
+  .wrap{
+    width:min(820px, 100%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+  }
+
+  h1{
+    margin:0;
+    font-size: clamp(26px, 4.6vw, 46px);
+    color: var(--deep);
+    letter-spacing:.2px;
+  }
+  .sub{
+    margin:0;
+    opacity:.75;
+    font-size: clamp(14px, 2.4vw, 18px);
+  }
+
+  /* ===== Heart button (centered + proportionate) ===== */
+  .heartBtn{
+    margin-top: 10px;
+    width: 180px;
+    height: 180px;
+    border-radius: 28px;
+    display:grid;
+    place-items:center;
+    background: rgba(255,79,163,.10);
+    border: 2px dashed rgba(255,79,163,.25);
+    cursor:pointer;
+    user-select:none;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 18px 30px rgba(255,79,163,.15);
+    transition: transform .12s ease;
+  }
+  .heartBtn:active{ transform: scale(.98); }
+  .heartSvg{
+    width: 120px;
+    height: 110px;
+    display:block;
+  }
+
+  /* ===== Scratch card (square centered) ===== */
+  .scratchCard{
+    width:min(420px, 92vw);
+    background: rgba(255,255,255,.85);
+    border: 2px solid rgba(255,79,163,.15);
+    border-radius: 24px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+  .canvasBox{
+    width:min(340px, 84vw);
+    aspect-ratio: 1 / 1;
+    margin: 10px auto 12px;
+    position:relative;
+    border-radius: 22px;
+    overflow:hidden;
+    border: 2px solid rgba(255,79,163,.18);
+    background: rgba(255,79,163,.06);
+  }
+  canvas{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    touch-action:none;
+  }
+  .hint{
+    margin: 6px 0 0;
+    font-size: 13px;
+    opacity:.75;
+    line-height:1.5;
+  }
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: rgba(255,79,163,.10);
+    border: 1px solid rgba(255,79,163,.20);
+    color: var(--deep);
+    font-weight: 750;
+    margin-top: 8px;
+  }
+  .smallNote{
+    margin-top: 10px;
+    font-size: 12px;
+    opacity: .75;
+  }
+
+  /* ===== Reopen letter button (shows after 100%) ===== */
+  .reopenBtn{
+    display:none;
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: 999px;
+    border: 0;
+    cursor: pointer;
+    background: linear-gradient(135deg, var(--pink), var(--pink2));
+    color: #fff;
+    font-weight: 800;
+    box-shadow: 0 18px 30px rgba(255,79,163,.22);
+    transition: transform .12s ease;
+  }
+  .reopenBtn:active{ transform: scale(.98); }
+  .reopenBtn.show{ display:inline-flex; align-items:center; gap:8px; }
+
+  /* ===== MODAL envelope (popup) ===== */
+  .modal{
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding: 20px;
+    background: rgba(20,10,14,.34);
+    z-index: 50;
+  }
+  .modal.show{ display:flex; }
+
+  .envelopeStage{
+    width:min(380px, 94vw);
+    position:relative;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+  }
+
+  .envelope{
+    width: 320px;
+    height: 220px;
+    position:relative;
+    animation: popIn .35s ease-out;
+  }
+  @keyframes popIn{
+    0%{ transform: translateY(18px) scale(.96); opacity: 0; }
+    100%{ transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  .env-base{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height: 150px;
+    background: #ffc1e3;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    border: 2px solid rgba(216,27,128,.15);
+    overflow:hidden;
+  }
+  .env-front{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height: 150px;
+    background: linear-gradient(180deg, rgba(255,255,255,.0), rgba(255,255,255,.22));
+    clip-path: polygon(0 0, 50% 58%, 100% 0, 100% 100%, 0 100%);
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+    pointer-events:none;
+  }
+  .env-flap{
+    position:absolute;
+    left:0; right:0;
+    top: 70px;
+    height: 110px;
+    background: #ff9fd2;
+    transform-origin: top center;
+    clip-path: polygon(0 0, 50% 70%, 100% 0, 100% 100%, 0 100%);
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    border: 2px solid rgba(216,27,128,.10);
+    transition: transform .55s cubic-bezier(.2,.9,.2,1);
+  }
+
+  /* stamp (seal) */
+  .seal{
+    position:absolute;
+    left:50%;
+    bottom: 66px;
+    transform: translateX(-50%);
+    width: 62px;
+    height: 62px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--pink), var(--pink2));
+    display:grid;
+    place-items:center;
+    box-shadow: 0 16px 22px rgba(255,79,163,.26);
+    border: 3px solid rgba(255,255,255,.65);
+    cursor:pointer;
+    user-select:none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .12s ease;
+    z-index: 5;
+  }
+  .seal:active{ transform: translateX(-50%) scale(.98); }
+  .seal svg{ width: 30px; height: 28px; }
+
+  /* letter pops out from envelope */
+  .letter{
+    position:absolute;
+    left:50%;
+    bottom: 78px;
+    transform: translateX(-50%) translateY(42px);
+    width: 290px;
+    border-radius: 16px;
+    background: #fff;
+    padding: 18px 16px;
+    box-shadow: 0 18px 35px rgba(0,0,0,.18);
+    border: 2px solid rgba(255,79,163,.18);
+    opacity: 0;
+    transition: transform .7s cubic-bezier(.2,.9,.2,1), opacity .35s ease;
+    z-index: 4;
+  }
+  .letter h2{
+    margin:0 0 8px;
+    color: var(--deep);
+    font-size: 18px;
+    text-align:left;
+  }
+  .letter p{
+    margin:0;
+    line-height:1.7;
+    font-size: 15px;
+    text-align:left;
+    white-space: pre-wrap; /* ให้ขึ้นบรรทัดตาม \n */
+  }
+
+  /* opened state */
+  .envelope.open .env-flap{
+    transform: rotateX(165deg);
+  }
+  .envelope.open .letter{
+    opacity: 1;
+    transform: translateX(-50%) translateY(-40px);
+  }
+
+  .modalClose{
+    position:absolute;
+    top:-10px;
+    right:-10px;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    border:0;
+    cursor:pointer;
+    background: rgba(255,255,255,.9);
+    box-shadow: 0 14px 24px rgba(0,0,0,.16);
+    font-size: 18px;
+    font-weight: 900;
+  }
+</style>
+</head>
+
+<body>
+  <div class="bg" id="bg"></div>
+
+  <!-- PAGE 1 -->
+  <section class="page" id="page1">
+    <div class="wrap">
+      <h1>ถึงแกรนของ ตต</h1>
+      <p class="sub">กดที่หัวใจ 💗</p>
+
+      <div class="heartBtn" id="toScratch" aria-label="ไปหน้าระบาย">
+        <svg class="heartSvg" viewBox="0 0 32 29.6" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#ff4fa3" d="M23.6,0c-3,0-5.7,1.5-7.6,3.9C14.1,1.5,11.4,0,8.4,0C3.8,0,0,3.8,0,8.4
+          c0,9.1,16,21.2,16,21.2s16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
+          <path fill="none" stroke="#d81b80" stroke-opacity=".45" stroke-width="1.2"
+           d="M23.6,0c-3,0-5.7,1.5-7.6,3.9C14.1,1.5,11.4,0,8.4,0C3.8,0,0,3.8,0,8.4
+          c0,9.1,16,21.2,16,21.2s16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
+        </svg>
+      </div>
+
+      <div class="smallNote">* ไม่มีปุ่มอื่นแล้วนะ กดหัวใจอย่างเดียวเลย</div>
+    </div>
+  </section>
+
+  <!-- PAGE 2 -->
+  <section class="page" id="page2">
+    <div class="wrap">
+      <h1>ระบายให้ครบ 100%</h1>
+      <p class="sub">ครบจริงๆ แล้วซองจดหมายจะเด้งขึ้นมา 💌</p>
+
+      <div class="scratchCard">
+        <div class="canvasBox">
+          <canvas id="imgCanvas"></canvas>
+          <canvas id="scratchCanvas"></canvas>
+        </div>
+
+        <div class="pill">ความคืบหน้า: <span id="pct">0%</span></div>
+        <p class="hint">ระบายด้วยนิ้วได้เลย 👆 (ต้องครบ 100% นะ)</p>
+      </div>
+
+      <!-- ✅ ปุ่มดูจดหมายอีกครั้ง (จะโผล่หลังครบ 100%) -->
+      <button class="reopenBtn" id="reopenLetter" type="button" aria-label="ดูจดหมายอีกครั้ง">
+        💌 ดูจดหมายอีกครั้ง
+      </button>
+    </div>
+  </section>
+
+  <!-- MODAL ENVELOPE -->
+  <div class="modal" id="modal">
+    <div class="envelopeStage">
+      <button class="modalClose" id="closeModal" aria-label="ปิด">×</button>
+
+      <div class="envelope" id="envelope">
+        <div class="letter" id="letter">
+          <h2>💌 ถึงแกรนของ ตต</h2>
+          <p id="letterText"></p>
+        </div>
+
+        <div class="env-flap" aria-hidden="true"></div>
+        <div class="env-base" aria-hidden="true"></div>
+        <div class="env-front" aria-hidden="true"></div>
+
+        <div class="seal" id="seal" aria-label="กดตราเพื่อเปิดจดหมาย">
+          <svg viewBox="0 0 32 29.6" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#fff" d="M23.6,0c-3,0-5.7,1.5-7.6,3.9C14.1,1.5,11.4,0,8.4,0C3.8,0,0,3.8,0,8.4
+            c0,9.1,16,21.2,16,21.2s16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ===== 1) Falling hearts (เยอะๆ ตลอดๆ) =====
+  const bg = document.getElementById('bg');
+
+  function makeHeartEl(size){
+    const el = document.createElement('div');
+    el.className = 'fall-heart';
+    el.style.width = size + 'px';
+    el.style.height = size + 'px';
+    el.innerHTML = `
+      <svg viewBox="0 0 32 29.6" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#ff4fa3" d="M23.6,0c-3,0-5.7,1.5-7.6,3.9C14.1,1.5,11.4,0,8.4,0C3.8,0,0,3.8,0,8.4
+        c0,9.1,16,21.2,16,21.2s16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
+      </svg>`;
+    return el;
+  }
+
+  function spawnHearts(){
+    const count = 34;
+    for(let i=0;i<count;i++){
+      const size = Math.floor(Math.random()*22) + 14;
+      const h = makeHeartEl(size);
+
+      h.style.left = (Math.random()*100) + '%';
+      h.style.animationDuration = ((Math.random()*6)+6) + 's';
+      h.style.animationDelay = (-(Math.random()*6)) + 's';
+      h.style.setProperty('--drift', (Math.random()*140 - 70) + 'px');
+      h.style.opacity = (Math.random()*0.35 + 0.18).toFixed(2);
+
+      bg.appendChild(h);
+
+      const dur = parseFloat(h.style.animationDuration) || 10;
+      setTimeout(() => h.remove(), (dur + 8) * 1000);
+    }
+  }
+  spawnHearts();
+  setInterval(spawnHearts, 1100);
+
+  // ===== 2) Navigation =====
+  document.getElementById('toScratch').addEventListener('click', () => {
+    document.getElementById('page2').scrollIntoView({behavior:'smooth'});
+  });
+
+  // ===== 3) Letter text =====
+  const letterTextEl = document.getElementById('letterText');
+  letterTextEl.textContent =
+`ขอบคุณที่มารู้จักกัน
+ขอบคุณที่เข้ามาในชีวิต
+ขอบคุณที่ทำให้เค้าไม่รู้สึกตัวคนเดียว
+เค้าแฮปปี้มากที่มีเธอเข้ามาในชีวิต
+เธอเป็นคนที่โคตรเก่งงงแถมยังสวยมากกกกกกกกกกกกกกกกก
+
+ไม่กล้าพิมว่า will you be my valentine เพราะมันยังเร็วไป55555
+งั้นก็อยู่กับเค้าไปจนคบกันจนเทีี่ยวด้วยกันได้เจอกันได้ทำทุกอย่างด้วยกันและอื่นๆอีกเยอะๆเลยนะะ
+
+ในวันที่เธอเหนื่อยหรือต้องการใครเค้าจะยุข้างๆเธอเสมอนะคั้บบ
+รักอ้วนนะคั้บบ จุ้ฟๆๆๆๆๆๆๆๆๆๆๆๆๆๆๆๆๆๆๆๆๆๆๆๆ
+
+#แกรนของตต`;
+
+  // ===== 4) Scratch logic =====
+  const imgCanvas = document.getElementById('imgCanvas');
+  const scratchCanvas = document.getElementById('scratchCanvas');
+  const imgCtx = imgCanvas.getContext('2d');
+  const scCtx  = scratchCanvas.getContext('2d', { willReadFrequently:true });
+
+  const pctEl = document.getElementById('pct');
+
+  // ✅ ปุ่มดูจดหมายอีกครั้ง
+  const reopenBtn = document.getElementById('reopenLetter');
+
+  let w=0,h=0;
+  let isDown=false;
+  let last=null;
+  let openedModal=false;
+
+  // ✅ ใส่รูปคุณ: วางไฟล์ photo.png ไว้ข้างๆ index.html
+  const IMAGE_SRC = "photo.png";
+
+  const currentImage = new Image();
+  currentImage.src = IMAGE_SRC;
+
+  function resizeCanvases(){
+    const rect = scratchCanvas.getBoundingClientRect();
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+
+    w = Math.floor(rect.width * dpr);
+    h = Math.floor(rect.height * dpr);
+
+    imgCanvas.width = w; imgCanvas.height = h;
+    scratchCanvas.width = w; scratchCanvas.height = h;
+
+    drawImage();
+    coverScratch();
+    updateProgress(true);
+  }
+
+  function drawImage(){
+    imgCtx.clearRect(0,0,w,h);
+    imgCtx.fillStyle = '#fff';
+    imgCtx.fillRect(0,0,w,h);
+
+    if(currentImage && currentImage.complete){
+      const iw = currentImage.naturalWidth || currentImage.width;
+      const ih = currentImage.naturalHeight || currentImage.height;
+      const scale = Math.max(w/iw, h/ih);
+      const dw = iw*scale, dh = ih*scale;
+      const dx = (w - dw)/2;
+      const dy = (h - dh)/2;
+      imgCtx.drawImage(currentImage, dx, dy, dw, dh);
+    }
+
+    imgCtx.save();
+    imgCtx.globalAlpha = .35;
+    imgCtx.lineWidth = Math.max(6, w*0.02);
+    imgCtx.strokeStyle = '#ff4fa3';
+    imgCtx.strokeRect(0,0,w,h);
+    imgCtx.restore();
+  }
+
+  function coverScratch(){
+    scCtx.globalCompositeOperation='source-over';
+    scCtx.clearRect(0,0,w,h);
+
+    scCtx.fillStyle='rgba(255,79,163,.62)';
+    scCtx.fillRect(0,0,w,h);
+
+    scCtx.fillStyle='rgba(255,255,255,.30)';
+    for(let i=0;i<50;i++){
+      const rx = Math.random()*w;
+      const ry = Math.random()*h;
+      const r  = (Math.random()*4+2) * (window.devicePixelRatio||1);
+      scCtx.beginPath();
+      scCtx.arc(rx,ry,r,0,Math.PI*2);
+      scCtx.fill();
+    }
+    scCtx.globalCompositeOperation='source-over';
+  }
+
+  function getPos(e){
+    const rect = scratchCanvas.getBoundingClientRect();
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const t = e.touches ? e.touches[0] : null;
+    const cx = t ? t.clientX : e.clientX;
+    const cy = t ? t.clientY : e.clientY;
+    return { x:(cx-rect.left)*dpr, y:(cy-rect.top)*dpr };
+  }
+
+  function eraseLine(a,b){
+    scCtx.save();
+    scCtx.globalCompositeOperation='destination-out';
+    scCtx.lineCap='round';
+    scCtx.lineJoin='round';
+    scCtx.strokeStyle='rgba(0,0,0,1)';
+    scCtx.lineWidth = Math.max(18, w*0.06);
+    scCtx.beginPath();
+    scCtx.moveTo(a.x,a.y);
+    scCtx.lineTo(b.x,b.y);
+    scCtx.stroke();
+    scCtx.restore();
+  }
+
+  function updateProgress(force=false){
+    const step = Math.max(5, Math.floor(8 * (window.devicePixelRatio||1)));
+    const data = scCtx.getImageData(0,0,w,h).data;
+
+    let total=0, cleared=0;
+    for(let y=0;y<h;y+=step){
+      for(let x=0;x<w;x+=step){
+        const idx = (y*w + x)*4;
+        const a = data[idx+3];
+        total++;
+        if(a < 20) cleared++;
+      }
+    }
+
+    let pct = total ? (cleared/total)*100 : 0;
+    if(pct > 99.6) pct = 100; // กันติด 99%
+
+    const shown = Math.round(pct);
+    pctEl.textContent = shown + '%';
+
+    if(!openedModal && pct >= 100){
+      openedModal = true;
+
+      // ✅ โชว์ปุ่ม "ดูจดหมายอีกครั้ง"
+      reopenBtn.classList.add('show');
+
+      showEnvelope();
+    }
+  }
+
+  function down(e){
+    isDown=true;
+    last=getPos(e);
+    e.preventDefault();
+  }
+  function move(e){
+    if(!isDown) return;
+    const p=getPos(e);
+    eraseLine(last,p);
+    last=p;
+    updateProgress();
+    e.preventDefault();
+  }
+  function up(){
+    isDown=false;
+    last=null;
+  }
+
+  scratchCanvas.addEventListener('mousedown', down);
+  scratchCanvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', up);
+
+  scratchCanvas.addEventListener('touchstart', down, {passive:false});
+  scratchCanvas.addEventListener('touchmove', move, {passive:false});
+  scratchCanvas.addEventListener('touchend', up);
+
+  // ===== 5) Envelope modal open animation =====
+  const modal = document.getElementById('modal');
+  const envelope = document.getElementById('envelope');
+  const seal = document.getElementById('seal');
+  const closeModal = document.getElementById('closeModal');
+
+  function showEnvelope(){
+    envelope.classList.remove('open');
+    modal.classList.add('show');
+  }
+
+  // ✅ กดปุ่มแล้วเปิดซองจดหมายให้อ่านอีกรอบ
+  reopenBtn.addEventListener('click', () => {
+    showEnvelope();
+  });
+
+  seal.addEventListener('click', (e) => {
+    e.stopPropagation();
+    envelope.classList.add('open');
+  });
+
+  closeModal.addEventListener('click', () => {
+    modal.classList.remove('show');
+  });
+  modal.addEventListener('click', (e) => {
+    if(e.target === modal) modal.classList.remove('show');
+  });
+
+  // ===== init =====
+  currentImage.onload = () => resizeCanvases();
+  currentImage.onerror = () => resizeCanvases();
+
+  window.addEventListener('resize', () => {
+    clearTimeout(window.__rz);
+    window.__rz = setTimeout(resizeCanvases, 120);
+  });
+</script>
+</body>
+</html>
